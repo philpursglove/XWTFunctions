@@ -73,5 +73,17 @@ namespace XWTFunctions.Tests
             await durableOrchestrationContextMock.Received(1).CallActivityAsync("SendAcceptanceEmail", null);
         }
 
+        [Test]
+        public async Task When_A_Player_Is_Rejected_An_Rejection_Email_Is_Sent()
+        {
+            var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
+
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerRejection")
+                .Returns(new Task<string>(() => { return "Reject"; }));
+
+            await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
+
+            await durableOrchestrationContextMock.Received(1).CallActivityAsync("SendRejectionEmail", null);
+        }
     }
 }

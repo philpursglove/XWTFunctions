@@ -19,46 +19,32 @@ namespace XWTFunctions.Workflow
         {
             await context.CallActivityAsync("RequestPlayerApproval", null);
 
-            using (var timeOutCts = new CancellationTokenSource())
+            Task<string> approvalEvent = context.WaitForExternalEvent<string>("PlayerAcceptance");
+            Task<string> rejectionEvent = context.WaitForExternalEvent<string>("PlayerRejection");
+            Task<string> cancellationEvent = context.WaitForExternalEvent<string>("PlayerCancellation");
+
+            var completionEvent =
+                await Task.WhenAny(approvalEvent, rejectionEvent, cancellationEvent);
+
+            string result = completionEvent.Result;
+
+            switch (result)
             {
-                // Look up tournament date/time from db
-                DateTime tournamentTime = DateTime.MaxValue;
-                Task timeOutEvent = context.CreateTimer(tournamentTime, timeOutCts.Token);
-
-                Task<bool> approvalEvent = context.WaitForExternalEvent<bool>("PlayerAcceptance");
-                Task<bool> rejectionEvent = context.WaitForExternalEvent<bool>("PlayerRejection");
-                Task<bool> cancellationEvent = context.WaitForExternalEvent<bool>("PlayerCancellation");
-
-                Task completionEvent =
-                    await Task.WhenAny(approvalEvent, rejectionEvent, cancellationEvent, timeOutEvent);
-
-                if (completionEvent == approvalEvent)
-                {
-                    timeOutCts.Cancel();
+                case "Accept":
                     // Send confirmation email to player
                     await context.CallActivityAsync("SendAcceptanceEmail", null);
-                }
-
-                if (completionEvent == rejectionEvent)
-                {
-                    timeOutCts.Cancel();
+                    break;
+                case "Reject":
                     // Send rejection email to player
                     await context.CallActivityAsync("SendRejectionEmail", null);
-                }
-
-                if (completionEvent == cancellationEvent)
-                {
-                    timeOutCts.Cancel();
+                    break;
+                case "Cancel":
                     // Send cancellation email to TO
                     await context.CallActivityAsync("SendCancellationEmail", null);
-                }
-
-                if (completionEvent == timeOutEvent)
-                {
-                    // Send email to both, I guess
-                }
+                    break;
             }
         }
+
 
         [FunctionName("RequestPlayerApproval")]
         public static void RequestPlayerApproval([ActivityTrigger] string name, ILogger log)
