@@ -7,7 +7,7 @@ namespace XWTFunctions.Queue
 {
     public class RecordGameScore
     {
-        [FunctionName("RecordGameScore")]
+        [FunctionName("RecordGameScoreFromQueue")]
         public void Run([QueueTrigger("myqueue-items", Connection = "")]string myQueueItem, ILogger log)
         {
             log.LogInformation($"C# Queue trigger function processed: {myQueueItem}");
