@@ -63,7 +63,8 @@ namespace XWTFunctions.Workflow
         [FunctionName("RequestPlayerApproval")]
         public static void RequestPlayerApproval([ActivityTrigger] string name, ILogger log)
         {
-            
+            // Send email to TO
+
         }
 
         [FunctionName("SendAcceptanceEmail")]

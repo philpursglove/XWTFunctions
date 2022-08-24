@@ -60,6 +60,18 @@ namespace XWTFunctions.Tests
             Assert.That(result.Headers.RetryAfter.Delta, Is.EqualTo(TimeSpan.FromSeconds(10)));
         }
 
-        
+        [Test]
+        public async Task When_A_Player_Is_Accepted_An_Acceptance_Email_Is_Sent()
+        {
+            var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
+
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerAcceptance")
+                .Returns(new Task<string>(() => { return "Accept"; }));
+
+            await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
+
+            await durableOrchestrationContextMock.Received(1).CallActivityAsync("SendAcceptanceEmail", null);
+        }
+
     }
 }
