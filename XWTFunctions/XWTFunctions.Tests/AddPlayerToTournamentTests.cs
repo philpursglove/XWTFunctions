@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net;
 using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask.ContextImplementations;
 using NSubstitute;
 using XWTFunctions.Workflow;
 
@@ -10,6 +11,8 @@ namespace XWTFunctions.Tests
 {
     public class AddPlayerToTournamentTests
     {
+        const string instanceId = "7E467BDB-213F-407A-B86A-1954053D3C24";
+
         [SetUp]
         public void Setup()
         {
@@ -20,7 +23,6 @@ namespace XWTFunctions.Tests
         {
             // Define constants
             const string functionName = "AddPlayerToTournament";
-            const string instanceId = "7E467BDB-213F-407A-B86A-1954053D3C24";
 
             // Mock TraceWriter
             var loggerMock = Substitute.For<Microsoft.Extensions.Logging.ILogger>();
@@ -61,29 +63,19 @@ namespace XWTFunctions.Tests
         }
 
         [Test]
-        public async Task When_A_Player_Is_Accepted_An_Acceptance_Email_Is_Sent()
+        public async Task Orchestrator_Waits_For_Events()
         {
             var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
 
-            durableOrchestrationContextMock.WaitForExternalEvent("PlayerAcceptance")
-                .Returns(new Task<string>(() => { return "Accept"; }));
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerAcceptance").Returns(new Task(() => Task.Delay(1000) ));
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerRejection").Returns(new Task(() => Task.Delay(1000)));
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerCancellation").Returns(new Task(() => Task.Delay(1000)));
 
             await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
 
-            await durableOrchestrationContextMock.Received(1).CallActivityAsync("SendAcceptanceEmail", null);
-        }
-
-        [Test]
-        public async Task When_A_Player_Is_Rejected_An_Rejection_Email_Is_Sent()
-        {
-            var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
-
-            durableOrchestrationContextMock.WaitForExternalEvent("PlayerRejection")
-                .Returns(new Task<string>(() => { return "Reject"; }));
-
-            await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
-
-            await durableOrchestrationContextMock.Received(1).CallActivityAsync("SendRejectionEmail", null);
+            await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("PlayerAcceptance");
+            await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("PlayerRejection");
+            await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("PlayerCancellation");
         }
     }
 }

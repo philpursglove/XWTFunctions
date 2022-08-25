@@ -19,29 +19,26 @@ namespace XWTFunctions.Workflow
         {
             await context.CallActivityAsync("RequestPlayerApproval", null);
 
-            Task<string> approvalEvent = context.WaitForExternalEvent<string>("PlayerAcceptance");
-            Task<string> rejectionEvent = context.WaitForExternalEvent<string>("PlayerRejection");
-            Task<string> cancellationEvent = context.WaitForExternalEvent<string>("PlayerCancellation");
+            var approvalEvent = context.WaitForExternalEvent("PlayerAcceptance");
+            var rejectionEvent = context.WaitForExternalEvent("PlayerRejection");
+            var cancellationEvent = context.WaitForExternalEvent("PlayerCancellation");
 
-            var completionEvent =
-                await Task.WhenAny(approvalEvent, rejectionEvent, cancellationEvent);
+            var completionEvent = Task.WhenAny(approvalEvent, rejectionEvent, cancellationEvent);
 
-            string result = completionEvent.Result;
-
-            switch (result)
+            if (completionEvent == approvalEvent)
             {
-                case "Accept":
-                    // Send confirmation email to player
-                    await context.CallActivityAsync("SendAcceptanceEmail", null);
-                    break;
-                case "Reject":
-                    // Send rejection email to player
-                    await context.CallActivityAsync("SendRejectionEmail", null);
-                    break;
-                case "Cancel":
-                    // Send cancellation email to TO
-                    await context.CallActivityAsync("SendCancellationEmail", null);
-                    break;
+                // Send confirmation email to player
+                await context.CallActivityAsync("SendAcceptanceEmail", null);
+            }
+            else if (completionEvent == rejectionEvent)
+            {
+                // Send rejection email to player
+                await context.CallActivityAsync("SendRejectionEmail", null);
+            }
+            else if (completionEvent == cancellationEvent)
+            {
+                // Send cancellation email to TO
+                await context.CallActivityAsync("SendCancellationEmail", null);
             }
         }
 
