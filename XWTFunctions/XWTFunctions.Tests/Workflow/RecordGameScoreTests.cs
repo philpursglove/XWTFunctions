@@ -7,9 +7,9 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask.ContextImplementations;
 using NSubstitute;
 using XWTFunctions.Workflow;
 
-namespace XWTFunctions.Tests
+namespace XWTFunctions.Tests.Workflow
 {
-    public class AddPlayerToTournamentTests
+    public class RecordGameScoreTests
     {
         const string instanceId = "7E467BDB-213F-407A-B86A-1954053D3C24";
 
@@ -22,7 +22,7 @@ namespace XWTFunctions.Tests
         public async Task HttpStart_returns_retryafter_header()
         {
             // Define constants
-            const string functionName = "AddPlayerToTournament";
+            const string functionName = "RecordGameScore";
 
             // Mock TraceWriter
             var loggerMock = Substitute.For<Microsoft.Extensions.Logging.ILogger>();
@@ -35,7 +35,7 @@ namespace XWTFunctions.Tests
 
 
             // Mock CreateCheckStatusResponse method
-            clientMock.CreateCheckStatusResponse(new HttpRequestMessage() , instanceId, false).ReturnsForAnyArgs(new HttpResponseMessage
+            clientMock.CreateCheckStatusResponse(new HttpRequestMessage(), instanceId, false).ReturnsForAnyArgs(new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
                 Content = new StringContent(string.Empty),
@@ -46,11 +46,11 @@ namespace XWTFunctions.Tests
             });
 
             // Call Orchestration trigger function
-            var result = await AddPlayerToTournament.HttpStart(
+            var result = await RecordGameScore.HttpStart(
                 new HttpRequestMessage()
                 {
                     Content = new StringContent("{}", Encoding.UTF8, "application/json"),
-                    RequestUri = new Uri("http://localhost:7071/orchestrators/AddPlayerToTournament"),
+                    RequestUri = new Uri("http://localhost:7071/orchestrators/RecordGameScore"),
                 },
                 clientMock,
                 loggerMock);
@@ -67,15 +67,14 @@ namespace XWTFunctions.Tests
         {
             var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
 
-            durableOrchestrationContextMock.WaitForExternalEvent("PlayerAcceptance").Returns(new Task(() => Task.Delay(1000) ));
-            durableOrchestrationContextMock.WaitForExternalEvent("PlayerRejection").Returns(new Task(() => Task.Delay(1000)));
-            durableOrchestrationContextMock.WaitForExternalEvent("PlayerCancellation").Returns(new Task(() => Task.Delay(1000)));
+            durableOrchestrationContextMock.WaitForExternalEvent("Player2Approval").Returns(new Task(() => Task.Delay(1000)));
+            durableOrchestrationContextMock.WaitForExternalEvent("TOApproval").Returns(new Task(() => Task.Delay(1000)));
 
-            await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
+            await RecordGameScore.RunOrchestrator(durableOrchestrationContextMock);
 
-            await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("PlayerAcceptance");
-            await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("PlayerRejection");
-            await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("PlayerCancellation");
+            await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("Player2Approval");
+            await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("TOApproval");
+
         }
     }
 }

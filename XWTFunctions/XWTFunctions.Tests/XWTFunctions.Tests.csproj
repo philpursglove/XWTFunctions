@@ -22,4 +22,8 @@
     <ProjectReference Include="..\XWTFunctions\XWTFunctions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Queue\" />
+  </ItemGroup>
+
 </Project>
