@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask.ContextImplementations;
 using NSubstitute;
+using NSubstitute.ReturnsExtensions;
 using XWTFunctions.Workflow;
 
 namespace XWTFunctions.Tests.Workflow
@@ -67,10 +68,6 @@ namespace XWTFunctions.Tests.Workflow
         {
             var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
 
-            durableOrchestrationContextMock.WaitForExternalEvent("PlayerAcceptance").Returns(new Task(() => Task.Delay(1000)));
-            durableOrchestrationContextMock.WaitForExternalEvent("PlayerRejection").Returns(new Task(() => Task.Delay(1000)));
-            durableOrchestrationContextMock.WaitForExternalEvent("PlayerCancellation").Returns(new Task(() => Task.Delay(1000)));
-
             await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
 
             await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("PlayerAcceptance");
@@ -79,5 +76,26 @@ namespace XWTFunctions.Tests.Workflow
 
 
         }
+
+        [Test]
+        public async Task Orchestrator_Waits_For_Approval_Events()
+        {
+            var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
+
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerAcceptance")
+                .Returns(Task.CompletedTask);
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerRejection")
+                .Returns(Task.Delay(10000));
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerCancellation")
+                .Returns(Task.Delay(10000));
+
+            await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
+
+            durableOrchestrationContextMock.Received(1).CallActivityAsync("RequestPlayerApproval", null);
+            durableOrchestrationContextMock.Received(1).CallActivityAsync("SendAcceptanceEmail", null);
+
+
+        }
+
     }
 }
