@@ -23,7 +23,7 @@ namespace XWTFunctions.Workflow
             var rejectionEvent = context.WaitForExternalEvent("PlayerRejection");
             var cancellationEvent = context.WaitForExternalEvent("PlayerCancellation");
 
-            var completionEvent = Task.WhenAny(approvalEvent, rejectionEvent, cancellationEvent);
+            var completionEvent = await Task.WhenAny(approvalEvent, rejectionEvent, cancellationEvent);
 
             if (completionEvent == approvalEvent)
             {
