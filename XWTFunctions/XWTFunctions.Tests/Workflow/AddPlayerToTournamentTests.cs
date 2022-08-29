@@ -95,5 +95,41 @@ namespace XWTFunctions.Tests.Workflow
             await durableOrchestrationContextMock.Received(1).CallActivityAsync("SendAcceptanceEmail", null);
         }
 
+        [Test]
+        public async Task Orchestrator_Sends_Rejection_Email_After_Rejection_Event()
+        {
+            var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
+
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerAcceptance")
+                .Returns(Task.Delay(10000));
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerRejection")
+                .Returns(Task.CompletedTask);
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerCancellation")
+                .Returns(Task.Delay(10000));
+
+            await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
+
+            await durableOrchestrationContextMock.Received(1).CallActivityAsync("RequestPlayerApproval", null);
+            await durableOrchestrationContextMock.Received(1).CallActivityAsync("SendRejectionEmail", null);
+        }
+
+        [Test]
+        public async Task Orchestrator_Sends_Cancellation_Email_After_Cancellation_Event()
+        {
+            var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
+
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerAcceptance")
+                .Returns(Task.Delay(10000));
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerRejection")
+                .Returns(Task.Delay(10000));
+            durableOrchestrationContextMock.WaitForExternalEvent("PlayerCancellation")
+                .Returns(Task.CompletedTask);
+
+            await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
+
+            await durableOrchestrationContextMock.Received(1).CallActivityAsync("RequestPlayerApproval", null);
+            await durableOrchestrationContextMock.Received(1).CallActivityAsync("SendCancellationEmail", null);
+        }
+
     }
 }
