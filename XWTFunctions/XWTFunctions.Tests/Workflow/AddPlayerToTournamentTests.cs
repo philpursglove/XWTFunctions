@@ -78,7 +78,7 @@ namespace XWTFunctions.Tests.Workflow
         }
 
         [Test]
-        public async Task Orchestrator_Waits_For_Approval_Events()
+        public async Task Orchestrator_Sends_Acceptance_Email_After_Acceptance_Event()
         {
             var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
 
@@ -91,10 +91,8 @@ namespace XWTFunctions.Tests.Workflow
 
             await AddPlayerToTournament.RunOrchestrator(durableOrchestrationContextMock);
 
-            durableOrchestrationContextMock.Received(1).CallActivityAsync("RequestPlayerApproval", null);
-            durableOrchestrationContextMock.Received(1).CallActivityAsync("SendAcceptanceEmail", null);
-
-
+            await durableOrchestrationContextMock.Received(1).CallActivityAsync("RequestPlayerApproval", null);
+            await durableOrchestrationContextMock.Received(1).CallActivityAsync("SendAcceptanceEmail", null);
         }
 
     }
