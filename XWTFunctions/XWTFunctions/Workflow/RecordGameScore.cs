@@ -18,19 +18,14 @@ namespace XWTFunctions.Workflow
         {
             await context.CallActivityAsync("RecordFirstPlayerResult", null);
 
-            using (var timeOutCTS = new CancellationTokenSource())
+            Task player2Approval = context.WaitForExternalEvent("Player2Approval");
+            Task toApproval = context.WaitForExternalEvent("TOApproval");
+
+            Task approval = await Task.WhenAny(player2Approval, toApproval);
+
+            if (approval == player2Approval || approval == toApproval)
             {
-                Task player2Approval = context.WaitForExternalEvent("Player2Approval");
-                Task toApproval = context.WaitForExternalEvent("TOApproval");
-
-                Task approval = Task.WhenAny(player2Approval, toApproval);
-
-                if (approval != null)
-                {
-                    timeOutCTS.Cancel();
-
-                    await context.CallActivityAsync("RecordFinalResult", null);
-                }
+                await context.CallActivityAsync("RecordFinalResult", null);
             }
         }
 
