@@ -1,11 +1,8 @@
-using NUnit.Framework.Internal;
-using System.Net.Http.Headers;
-using System.Net;
-using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask.ContextImplementations;
 using NSubstitute;
-using NSubstitute.ReturnsExtensions;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
 using XWTFunctions.Workflow;
 
 namespace XWTFunctions.Tests.Workflow
