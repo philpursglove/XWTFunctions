@@ -67,9 +67,6 @@ namespace XWTFunctions.Tests.Workflow
         {
             var durableOrchestrationContextMock = Substitute.For<IDurableOrchestrationContext>();
 
-            durableOrchestrationContextMock.WaitForExternalEvent("Player2Approval").Returns(new Task(() => Task.Delay(1000)));
-            durableOrchestrationContextMock.WaitForExternalEvent("TOApproval").Returns(new Task(() => Task.Delay(1000)));
-
             await RecordGameScore.RunOrchestrator(durableOrchestrationContextMock);
 
             await durableOrchestrationContextMock.Received(1).WaitForExternalEvent("Player2Approval");
