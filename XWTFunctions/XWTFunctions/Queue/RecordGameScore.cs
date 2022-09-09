@@ -8,7 +8,7 @@ namespace XWTFunctions.Queue
     public class RecordGameScore
     {
         [FunctionName("RecordGameScoreFromQueue")]
-        public void Run([QueueTrigger("myqueue-items", Connection = "")]GameScoreMessage message, ILogger log)
+        public void Run([QueueTrigger("scoresonthedoors", Connection = "")]GameScoreMessage message, ILogger log)
         {
             
         }
