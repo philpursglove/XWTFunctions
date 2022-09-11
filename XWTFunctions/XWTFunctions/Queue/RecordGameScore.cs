@@ -23,7 +23,7 @@ namespace XWTFunctions.Queue
             Game game = gameRepository.Query().First(g => g.Id == message.GameId);
             if (game == null)
             {
-                log.LogError($"Game with id {message.GameId.ToString()} not found");
+                log.LogError($"Game with id {message.GameId} not found");
                 return;
             }
 
@@ -49,16 +49,21 @@ namespace XWTFunctions.Queue
                 if (game.Player1Score == game.Player2Score)
                 {
                     // Draw
+                    // Player 1 +1 point
+                    // Player 2 +1 point
+
                 }
                 else
                 {
                     if (game.Player1Score > game.Player2Score)
                     {
                         // Player 1 win
+                        // Player 1 +3 points
                     }
                     else
                     {
                         // Player 2 win
+                        // Player 2 +3 points
                     }
                 }
             }
@@ -99,5 +104,7 @@ namespace XWTFunctions.Queue
         public Guid Id { get; set; }
 
         public int Points { get; set; }
+
+        public bool Dropped { get; set; }
     }
 }
