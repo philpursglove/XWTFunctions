@@ -1,8 +1,7 @@
+using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
-using Microsoft.Extensions.Logging;
 using XWTFunctions.Messages;
 
 namespace XWTFunctions.Queue
@@ -32,25 +31,35 @@ namespace XWTFunctions.Queue
             game.Player1Concede = message.Player1Concede;
             game.Player2Concede = message.Player2Concede;
 
+            TournamentPlayer player1 = tournamentPlayerRepository.Query().FirstOrDefault(g => g.Id == game.Player1Id);
+            TournamentPlayer player2 = tournamentPlayerRepository.Query().FirstOrDefault(g => g.Id == game.Player2Id);
+
             if (game.Player1Concede || game.Player2Concede)
             {
                 // Concession
                 if (game.Player1Concede)
                 {
-
+                    // Player2 +3 points, 20 mission points
+                    player2.Points += 3;
+                    player2.MissionPoints += 20;
                 }
                 else
                 {
-                    
+                    // Player1 +3 points, 20 mission points
+                    player1.Points += 3;
+                    player1.MissionPoints += 20;
                 }
             }
             else
             {
+                player1.MissionPoints += message.Player1Score;
+                player2.MissionPoints += message.Player2Score;
+
                 if (game.Player1Score == game.Player2Score)
                 {
                     // Draw
-                    // Player 1 +1 point
-                    // Player 2 +1 point
+                    player1.Points += 1;
+                    player2.Points += 1;
 
                 }
                 else
@@ -58,23 +67,25 @@ namespace XWTFunctions.Queue
                     if (game.Player1Score > game.Player2Score)
                     {
                         // Player 1 win
-                        // Player 1 +3 points
+                        player1.Points += 3;
                     }
                     else
                     {
                         // Player 2 win
-                        // Player 2 +3 points
+                        player2.Points += 3;
                     }
                 }
             }
 
             // Drops
             if (message.Player1Drop)
-            {}
+            {
+                player1.Dropped = true;
+            }
 
             if (message.Player2Drop)
             {
-
+                player2.Dropped = true;
             }
         }
     }
@@ -104,6 +115,8 @@ namespace XWTFunctions.Queue
         public Guid Id { get; set; }
 
         public int Points { get; set; }
+
+        public int MissionPoints { get; set; }
 
         public bool Dropped { get; set; }
     }
